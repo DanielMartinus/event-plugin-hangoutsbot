@@ -2,6 +2,7 @@ import asyncio
 import plugins
 import string
 import json
+import time
 
 # Event plugin
 # Have ideas or want to contribute you can find the source at
@@ -10,6 +11,7 @@ import json
 def _initialise(bot):
     plugins.register_user_command(["event", "events", "join"])
 
+current_milli_time = lambda: int(round(time.time() * 1000))
 
 def clear(bot, event, *args):
     conv_event = {}
@@ -203,6 +205,7 @@ def event(bot, event, *args):
             body = {}
             body['hangout'] = 0
             body['title'] = title
+            body['sorting'] = "date" # no sorting means old version of plugin
             body['owner'] = event.user.id_.chat_id
             body['participants'] = {}
             key = "event:{}:{}".format(event.conv_id, title)
@@ -226,7 +229,10 @@ def _join(bot, event, conv_event, _key, _user):
        _newUser = event.user
 
     participants = _event['participants']
-    participants[_newUser.id_.chat_id] = _newUser.full_name
+    if 'sorting' in _event:
+        participants[str(current_milli_time())] = _newUser.full_name
+    else:
+        participants[_newUser.id_.chat_id] = _newUser.full_name
 
     _event['participants'] = participants
     conv_event[_key] = _event
